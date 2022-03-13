@@ -1,3 +1,4 @@
+from matplotlib.pyplot import cla
 import numpy as np
 
 class Variable:
@@ -30,14 +31,16 @@ class Variable:
 
 
 class Function:
-    def __call__(self, input):
-        x = input.data
-        y = self.forward(x)
-        output = Variable(as_array(y))
-        output.set_creator(self) #<main.Exp object at 0x115612670>
-        self.input = input #親子
-        self.output = output #親子
-        return output 
+    def __call__(self, inputs):
+        xs = [x.data for x in inputs] #list
+        ys = self.forward(xs) #list全体に適用
+        outputs = [Variable(as_array(y)) for y in ys] #ysをVariableクラスに適用
+        for output in outputs:
+            output.set_creator(self) 
+        self.inputs = inputs #親子
+        self.outputs = outputs #親子
+        return outputs
+        # return outputs if len(outputs) > 1 else outputs[0] #帰り値の長さ
 
     def forward(self, x):
         raise NotImplementedError()
@@ -48,7 +51,6 @@ class Function:
         
 class Square(Function):
     def forward(self, x):
-        print("x", x.data)
         y = x ** 2
         return y
     
@@ -69,12 +71,23 @@ class Exp(Function):
         return gx
 
 
+class Add(Function):
+    def forward(self, xs):
+        #二変数のみ？
+        x0, x1 = xs
+        y = x0 + x1
+        return (y,)
+
+
+
 def numerical_diff(f, x, eps=1e-4):
     x0 = Variable(as_array(x.data - eps))
     x1 = Variable(as_array(x.data + eps))  #ここも変更
     y0 = f(x0)
     y1 = f(x1)
     return (y1.data - y0.data) / (2 * eps)
+
+
 
 def as_array(x):
     if np.isscalar(x):
