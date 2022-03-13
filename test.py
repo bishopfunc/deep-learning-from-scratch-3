@@ -163,11 +163,11 @@ assert type(array) is Variable
 #     assert False
 
 # #step10
-# print('step9'.center(50, '='))
+# print('step10'.center(50, '='))
 # print('pass')
 
 #step11
-print('step9'.center(50, '='))
+print('step11'.center(50, '='))
 a = np.array(2)
 b = np.array(3)
 xs = [Variable(a), Variable(b)]
@@ -176,3 +176,5 @@ add = Add()
 ys = add(xs)
 y = ys[0]
 print(y.data)
+
+
