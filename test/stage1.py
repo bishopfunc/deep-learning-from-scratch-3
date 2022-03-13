@@ -1,6 +1,7 @@
 import sys, os
 sys.path.append(os.pardir)
 import numpy as np
+import math
 from main import *
 
 #step1

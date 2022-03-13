@@ -22,11 +22,16 @@ class Variable:
         #再帰->ループ
         while funcs:
             f = funcs.pop() #末尾から取得
-            x, y = f.input, f.output 
-            x.grad = f.backward(y.grad) #y.gradで考える
-            #再帰 f is Noneまで x.gradはすでに代入済み
-            if x.creator is not None:
-                funcs.append(x.creator)
+            gys = [output.grad for output in f.outputs] #output.gradのリスト
+            gxs = f.backward(*gys) #
+            if not isinstance(gxs, tuple):
+                gxs = (gxs,) #要素指定できるよう
+            
+            for x, gx in zip(f.inputs, gxs): 
+                x.grad = gx
+
+                if x.creator is not None:
+                    funcs.append(x.creator)
 
 
 
@@ -56,7 +61,7 @@ class Square(Function):
         return y
     
     def backward(self, gy):
-        x = self.input.data
+        x = self.inputs[0].data 
         gx = 2 * x * gy
         return gx
 
@@ -67,7 +72,7 @@ class Exp(Function):
         return y
     
     def backward(self, gy):
-        x = self.input.data
+        x = self.inputs[0].data 
         gx = np.exp(x) * gy
         return gx
 
@@ -77,6 +82,9 @@ class Add(Function):
         y = x0 + x1
         return y
 
+    def backward(self, gy):
+        return gy, gy
+
 
 def numerical_diff(f, x, eps=1e-4):
     x0 = Variable(as_array(x.data - eps))
@@ -84,7 +92,6 @@ def numerical_diff(f, x, eps=1e-4):
     y0 = f(x0)
     y1 = f(x1)
     return (y1.data - y0.data) / (2 * eps)
-
 
 def as_array(x):
     if np.isscalar(x):
