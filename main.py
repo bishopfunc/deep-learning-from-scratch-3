@@ -31,16 +31,17 @@ class Variable:
 
 
 class Function:
-    def __call__(self, inputs):
+    def __call__(self, *inputs):
         xs = [x.data for x in inputs] #list
-        ys = self.forward(xs) #list全体に適用
+        ys = self.forward(*xs) #self.forward(x0, x1)とおなじ
+        if not isinstance(ys, tuple):
+            ys = (ys,)
         outputs = [Variable(as_array(y)) for y in ys] #ysをVariableクラスに適用
         for output in outputs:
             output.set_creator(self) 
         self.inputs = inputs #親子
         self.outputs = outputs #親子
-        return outputs
-        # return outputs if len(outputs) > 1 else outputs[0] #帰り値の長さ
+        return outputs if len(outputs) > 1 else outputs[0] #帰り値の長さ
 
     def forward(self, x):
         raise NotImplementedError()
@@ -72,12 +73,9 @@ class Exp(Function):
 
 
 class Add(Function):
-    def forward(self, xs):
-        #二変数のみ？
-        x0, x1 = xs
+    def forward(self, x0, x1):
         y = x0 + x1
-        return (y,)
-
+        return y
 
 
 def numerical_diff(f, x, eps=1e-4):
@@ -86,7 +84,6 @@ def numerical_diff(f, x, eps=1e-4):
     y0 = f(x0)
     y1 = f(x1)
     return (y1.data - y0.data) / (2 * eps)
-
 
 
 def as_array(x):
@@ -100,3 +97,5 @@ def square(x):
 def exp(x):
     return Exp()(x)
 
+def add(x0, x1):
+    return Add()(x0, x1)
